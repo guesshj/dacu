@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="일기, 독서, 운동, 오늘의 사진을 한 장의 다꾸 페이지로 꾸미는 웹앱" />
+    <meta name="theme-color" content="#3d5bd9" />
+    <title>나의 디지털 다꾸</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%80%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- 배경: 조각보 + 한지 결 -->
+    <div class="backdrop" aria-hidden="true">
+      <div class="backdrop__jogakbo"></div>
+      <div class="backdrop__hanji"></div>
+      <p class="backdrop__mark">오늘을 한 장에</p>
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__seal" aria-hidden="true">다꾸</span>
+        <div>
+          <h1 class="brand__title">나의 디지털 다꾸</h1>
+          <p class="brand__sub">일기, 책, 운동, 사진 한 컷을 한 장에 붙여요</p>
+        </div>
+      </div>
+
+      <div class="datenav" role="group" aria-label="날짜 이동">
+        <button class="icon-btn" id="prevDay" type="button" aria-label="이전 날">‹</button>
+        <input type="date" id="dateInput" aria-label="날짜 선택" />
+        <button class="icon-btn" id="nextDay" type="button" aria-label="다음 날">›</button>
+        <button class="chip" id="todayBtn" type="button">오늘</button>
+      </div>
+
+      <div class="actions">
+        <span class="save-status" id="saveStatus" role="status">저장됨</span>
+        <button class="btn btn--ghost" id="archiveBtn" type="button">🗂️ 모아보기</button>
+        <button class="btn btn--primary" id="downloadBtn" type="button">⬇️ 이미지 다운로드</button>
+        <details class="menu">
+          <summary class="btn btn--ghost" aria-label="백업 메뉴">백업</summary>
+          <div class="menu__list">
+            <button type="button" id="exportJsonBtn">백업 파일 다운로드 (JSON)</button>
+            <button type="button" id="importJsonBtn">백업 파일 불러오기</button>
+          </div>
+        </details>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- 편집 영역 -->
+      <section class="editor" aria-label="기록 편집">
+        <div class="tabs" role="tablist" aria-label="기록 종류">
+          <button class="tab is-active" type="button" role="tab" data-tab="diary" aria-selected="true">
+            ✏️ 일기
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="book" aria-selected="false">📚 독서</button>
+          <button class="tab" type="button" role="tab" data-tab="workout" aria-selected="false">
+            💪 운동
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="photo" aria-selected="false">📸 사진</button>
+          <button class="tab" type="button" role="tab" data-tab="deco" aria-selected="false">
+            🎀 꾸미기
+          </button>
+        </div>
+
+        <!-- 일기 -->
+        <div class="panel" data-panel="diary" role="tabpanel">
+          <label class="field">
+            <span class="field__label">제목</span>
+            <input type="text" data-bind="diary.title" maxlength="30" placeholder="오늘을 한 줄로 부르면?" />
+          </label>
+          <div class="field">
+            <span class="field__label">기분</span>
+            <div class="chips" data-chipset="diary.mood" data-toggle="true"></div>
+          </div>
+          <div class="field">
+            <span class="field__label">날씨</span>
+            <div class="chips" data-chipset="diary.weather" data-toggle="true"></div>
+          </div>
+          <label class="field">
+            <span class="field__label">
+              일기
+              <em class="count" id="diaryCount">0 / 500</em>
+            </span>
+            <textarea
+              data-bind="diary.text"
+              maxlength="500"
+              rows="9"
+              placeholder="있었던 일, 들었던 말, 기억하고 싶은 장면을 적어보세요."
+            ></textarea>
+          </label>
+        </div>
+
+        <!-- 독서 -->
+        <div class="panel" data-panel="book" role="tabpanel" hidden>
+          <label class="field">
+            <span class="field__label">책 제목</span>
+            <input type="text" data-bind="book.title" maxlength="40" placeholder="오늘 펼친 책" />
+          </label>
+          <div class="row">
+            <label class="field">
+              <span class="field__label">지은이</span>
+              <input type="text" data-bind="book.author" maxlength="24" placeholder="작가 이름" />
+            </label>
+            <label class="field field--narrow">
+              <span class="field__label">읽은 쪽수</span>
+              <input
+                type="number"
+                data-bind="book.pages"
+                min="0"
+                max="9999"
+                inputmode="numeric"
+                placeholder="30"
+              />
+            </label>
+          </div>
+          <div class="row">
+            <label class="field">
+              <span class="field__label">상태</span>
+              <select data-bind="book.status">
+                <option value="reading">읽는 중</option>
+                <option value="done">완독</option>
+                <option value="again">다시 읽기</option>
+                <option value="paused">잠시 멈춤</option>
+              </select>
+            </label>
+            <div class="field">
+              <span class="field__label">별점</span>
+              <div class="rating" id="rating" role="radiogroup" aria-label="별점"></div>
+            </div>
+          </div>
+          <label class="field">
+            <span class="field__label">마음에 남은 문장</span>
+            <textarea
+              data-bind="book.quote"
+              maxlength="100"
+              rows="3"
+              placeholder="밑줄 긋고 싶었던 한 문장"
+            ></textarea>
+          </label>
+        </div>
+
+        <!-- 운동 -->
+        <div class="panel" data-panel="workout" role="tabpanel" hidden>
+          <div class="workout-form">
+            <label class="field">
+              <span class="field__label">종류</span>
+              <select id="wType"></select>
+            </label>
+            <label class="field field--narrow">
+              <span class="field__label">시간(분)</span>
+              <input type="number" id="wMin" min="1" max="600" value="30" inputmode="numeric" />
+            </label>
+            <label class="field field--narrow">
+              <span class="field__label">강도</span>
+              <select id="wLevel">
+                <option>가볍게</option>
+                <option selected>적당히</option>
+                <option>빡세게</option>
+              </select>
+            </label>
+            <button class="btn btn--primary workout-form__add" id="wAdd" type="button">기록 추가</button>
+          </div>
+          <ul class="workout-list" id="wList"></ul>
+          <p class="workout-total" id="wTotal"></p>
+          <label class="field">
+            <span class="field__label">걸음 수</span>
+            <input
+              type="number"
+              data-bind="workout.steps"
+              min="0"
+              max="200000"
+              inputmode="numeric"
+              placeholder="8000"
+            />
+          </label>
+        </div>
+
+        <!-- 사진 -->
+        <div class="panel" data-panel="photo" role="tabpanel" hidden>
+          <label class="dropzone" id="dropzone">
+            <input type="file" id="photoInput" accept="image/*" />
+            <span class="dropzone__icon" aria-hidden="true">📷</span>
+            <span class="dropzone__text">오늘의 한 컷 올리기</span>
+            <span class="dropzone__hint">눌러서 고르거나 여기로 끌어다 놓아요</span>
+          </label>
+
+          <div class="field">
+            <span class="field__label">필터</span>
+            <div class="filter-grid" id="filterGrid"></div>
+          </div>
+          <div class="row">
+            <label class="field">
+              <span class="field__label">
+                필터 강도
+                <em class="count" id="intensityVal">100%</em>
+              </span>
+              <input type="range" data-bind="photo.intensity" min="0" max="100" step="1" />
+            </label>
+            <label class="field">
+              <span class="field__label">
+                밝기
+                <em class="count" id="brightnessVal">0</em>
+              </span>
+              <input type="range" data-bind="photo.brightness" min="-40" max="40" step="1" />
+            </label>
+          </div>
+          <div class="field">
+            <span class="field__label">프레임</span>
+            <div class="chips" data-chipset="photo.frame"></div>
+          </div>
+          <label class="field">
+            <span class="field__label">프레임 문구</span>
+            <input
+              type="text"
+              data-bind="photo.caption"
+              maxlength="20"
+              placeholder="사진 아래 들어갈 한마디"
+            />
+          </label>
+          <div class="chips chips--small" id="captionPresets" aria-label="추천 문구"></div>
+          <button class="btn btn--text" id="removePhoto" type="button" hidden>사진 빼기</button>
+        </div>
+
+        <!-- 꾸미기 -->
+        <div class="panel" data-panel="deco" role="tabpanel" hidden>
+          <div class="field">
+            <span class="field__label">속지</span>
+            <div class="chips" data-chipset="deco.theme"></div>
+          </div>
+          <label class="field">
+            <span class="field__label">마스킹테이프 문구</span>
+            <input
+              type="text"
+              data-bind="deco.banner"
+              maxlength="14"
+              placeholder="페이지 맨 위 테이프 문구"
+            />
+          </label>
+
+          <div class="field">
+            <span class="field__label">스티커</span>
+            <div class="segmented" role="tablist" aria-label="스티커 종류">
+              <button type="button" class="is-active" data-sticker-tab="emoji">이모지</button>
+              <button type="button" data-sticker-tab="text">문구</button>
+              <button type="button" data-sticker-tab="shape">모양</button>
+            </div>
+            <div class="sticker-grid" id="stickerGrid"></div>
+          </div>
+
+          <div class="field">
+            <span class="field__label">나만의 문구 스티커</span>
+            <div class="custom-sticker">
+              <input type="text" id="customText" maxlength="12" placeholder="예: 오늘 최고" />
+              <button class="btn btn--primary" id="customAdd" type="button">붙이기</button>
+            </div>
+            <div class="swatches" id="customColors" role="radiogroup" aria-label="스티커 색"></div>
+          </div>
+          <button class="btn btn--text" id="clearStickers" type="button">스티커 모두 떼기</button>
+        </div>
+      </section>
+
+      <!-- 미리보기 -->
+      <section class="stage" aria-label="다꾸 페이지 미리보기">
+        <div class="stage__head">
+          <h2>오늘의 페이지</h2>
+          <p>스티커는 끌어서 옮기고, 파란 손잡이로 크기와 각도를 바꿔요.</p>
+        </div>
+        <div class="stage__paper">
+          <canvas id="page" role="img" aria-label="꾸민 다꾸 페이지"></canvas>
+        </div>
+        <div class="sticker-tools" id="stickerTools" hidden>
+          <button type="button" data-act="smaller" aria-label="작게">－</button>
+          <button type="button" data-act="bigger" aria-label="크게">＋</button>
+          <button type="button" data-act="rotl" aria-label="왼쪽으로 돌리기">↺</button>
+          <button type="button" data-act="rotr" aria-label="오른쪽으로 돌리기">↻</button>
+          <button type="button" data-act="front">맨 앞으로</button>
+          <button type="button" data-act="dup">복제</button>
+          <button type="button" data-act="delete" class="is-danger">떼기</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- 기록 모아보기 -->
+    <dialog class="archive" id="archive" aria-labelledby="archiveTitle">
+      <div class="archive__head">
+        <h2 id="archiveTitle">기록 모아보기</h2>
+        <button class="icon-btn" id="archiveClose" type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="archive__stats" id="archiveStats"></div>
+      <div class="archive__filters">
+        <div class="chips chips--small" id="archiveCats"></div>
+        <div class="archive__row">
+          <select id="archiveMonth" aria-label="월 선택"></select>
+          <input type="search" id="archiveSearch" placeholder="제목, 책, 일기 내용 검색" />
+        </div>
+      </div>
+      <ul class="archive__list" id="archiveList"></ul>
+    </dialog>
+
+    <input type="file" id="importFile" accept="application/json,.json" hidden />
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/stickers.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
